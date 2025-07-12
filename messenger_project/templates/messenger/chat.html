@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Chat with {{ recipient.username }}</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Silkscreen:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'messenger/chat.css' %}">
+</head>
+
+<body class="body-inbox">
+    <div class="inbox-container">
+        <!-- LEFT: Inbox -->
+        <div class="left-sidebar">
+            <div class="logo">
+                <h2>CHATS</h2>
+                <img src="{% static 'messenger/icons/new_chat.svg' %}" alt="New Chat" class="new-chat-icon"
+                    onclick="togglePopup()" />
+            </div>
+            {% for user in chat_users %}
+            <div class="chat-user {% if user.id == recipient.id %}selected{% endif %}">
+                <a href="{% url 'chat' user.id %}">
+                    <img src="{% static 'messenger/img/default1.jpg' %}" alt="">
+                    <span>{{ user.username }}</span>
+                </a>
+            </div>
+            {% endfor %}
+
+            <!-- New Chat Popup -->
+            <div id="newChatPopup" class="popup-overlay">
+                <div class="popup-box">
+                    <h3>Start new chat</h3>
+                    <ul class="user-list">
+                        {% for user in all_users %}
+                        {% if user not in chat_users and user != request.user %}
+                        <li class="user-item">
+                            <a href="{% url 'chat' user.id %}"
+                                style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+                                <img src="{% static 'messenger/img/default1.jpg' %}" alt="Avatar">
+                                <span>{{ user.username }}</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Chat Area -->
+        <div class="right-chat">
+            <div class="chat-header">
+                <img src="{% static 'messenger/img/default1.jpg' %}" alt="">
+                <h3>{{ recipient.username }}</h3>
+            </div>
+            <div class="chat-messages">
+                {% for message in messages %}
+                <div class="{% if message.sender == request.user %}sent{% else %}received{% endif %}">
+                    <p>{{ message.body }}</p>
+                    <small>{{ message.timestamp|date:"H:i" }}</small>
+                </div>
+                {% empty %}
+                <p style="text-align:center;">Start the conversation!</p>
+                {% endfor %}
+            </div>
+            <form method="post" class="chat-form">
+                {% csrf_token %}
+                <textarea name="body" rows="1" placeholder="Type a message" class="message-input" required></textarea>
+                <button type="submit">
+                    <img src="{% static 'messenger/icons/wpf_sent.svg' %}" alt="">
+                </button>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Auto resize textarea height
+        const textarea = document.querySelector('.message-input');
+        textarea.addEventListener('input', () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        });
+
+        // Auto-scroll to the latest message 
+        window.onload = function () {
+            const chatMessages = document.querySelector('.chat-messages');
+            if (chatMessages) {
+                chatMessages.scrollTo({
+                    top: chatMessages.scrollHeight,
+                    behavior: 'smooth'  
+                });
+            }
+        };
+
+        function togglePopup() {
+            const popup = document.getElementById("newChatPopup");
+            popup.classList.toggle("show");
+        }
+        // Close popup on outside click
+        document.addEventListener('click', function (event) {
+            const popup = document.getElementById("newChatPopup");
+            const icon = document.querySelector('.new-chat-icon');
+            const box = popup.querySelector('.popup-box');
+
+            // If popup is open and click is outside box and icon
+            if (popup.classList.contains('show') && !box.contains(event.target) && event.target !== icon) {
+                popup.classList.remove('show');
+            }
+        });
+
+        // === WebSocket Real-Time Setup ===
+        const roomName = "{{ room_name }}";
+        console.log("Room name:", roomName);
+        const chatMessages = document.querySelector('.chat-messages');
+        const input = document.querySelector('.message-input');
+
+        const socket = new WebSocket(
+            'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+        );
+
+        socket.onopen = () => {
+            console.log("WebSocket connected");
+        };
+
+        socket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            console.log("Message received:", data);
+
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add(data.username === "{{ request.user.username }}" ? 'sent' : 'received');
+
+            messageBubble.innerHTML = `
+            <p>${data.message}</p>
+            <small>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit',hour12: false })}</small>
+        `;
+
+            chatMessages.appendChild(messageBubble);
+            chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+        };
+
+        document.querySelector('.chat-form').onsubmit = function (e) {
+            e.preventDefault();
+            const message = input.value.trim();
+            if (message) {
+                socket.send(JSON.stringify({ message: message }));
+                input.value = '';
+            }
+        };
+
+    </script>
+</body>
+
+</html>

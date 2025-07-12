@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Inbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Silkscreen:wght@400;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'messenger/inbox.css' %}">
+</head>
+
+<body class="body-inbox">
+  <div class="inbox-container">
+    <div class="left-sidebar">
+      <div class="logo">
+        <h2>chats</h2>
+      </div>
+      <div class="start-new">
+        <div class="start-new" id="start-chat-btn">
+          <img src="{% static 'messenger/icons/new_chat.png' %}" alt="">
+          <span>Start New Chat</span>
+          <img class="arrow" src="{% static 'messenger/icons/maki_arrow.svg' %}">
+        </div>
+      </div>
+    </div>
+    <!-- New Chat Popup -->
+    <div class="popup-overlay" id="chat-popup">
+      <div class="popup-box">
+        <h3>Text to:</h3>
+        <ul class="user-list">
+          {% for user in users %}
+          <li class="user-item" onclick="startChat('{{ user.id }}')">
+            <img src="{% static 'messenger/img/default1.jpg' %}">
+            <span>{{ user.username }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="right-chat">
+      {% if has_messages %}
+      <h3>/TEXTITUP <span>No message selected!</span></h3>
+      {% else %}
+      <div class="empty-state">
+        <h1>/TEXTITUP</h1>
+        <p>N0 MESSAGE SELECTED!</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    const popup = document.getElementById("chat-popup");
+    const btn = document.getElementById("start-chat-btn");
+
+    btn.onclick = () => {
+      popup.style.display = "flex";
+    };
+
+    // Close popup when clicked outside the box
+    popup.onclick = (e) => {
+      if (e.target === popup) {
+        popup.style.display = "none";
+      }
+    };
+
+    // Redirect to send message page with selected user
+    function startChat(userId) {
+      window.location.href = `/chat/${userId}/`;  // update this based on your URL config
+    }
+  </script>
+
+</body>
+
+</html>

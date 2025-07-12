@@ -1,0 +1,35 @@
+{%load static%}
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign Up - TextItUp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'messenger/style.css' %}">
+</head>
+<body>
+  <div class="signup-container">
+    <div class="left-panel">
+      <h1>/TEXTITUP</h1>
+      <p>LETS START TALKING!</p>
+    </div>
+    <div class="right-panel">
+      <h2>Sign up</h2>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.username }}
+        {{ form.email }}
+        {{ form.password1 }}
+        {{ form.password2 }}
+        <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+        <div class = "button-container">
+            <button type="submit">Register</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
