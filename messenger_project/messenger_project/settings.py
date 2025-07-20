@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['textitup.onrender.com', 'www.textitup.onrender.com']
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://textitup.onrender.com"
+]
 
 # Application definition
 
