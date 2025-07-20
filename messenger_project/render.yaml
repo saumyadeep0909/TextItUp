@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: textitup
+    env: python
+    rootDir: messenger_project
+    buildCommand: pip install -r requirements.txt
+    startCommand: daphne -b 0.0.0.0 -p 10000 messenger_project.asgi:application
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: chat-redis
+          property: connectionString
+
+databases:
+  - name: chat-redis
+    plan: free
+    type: redis
