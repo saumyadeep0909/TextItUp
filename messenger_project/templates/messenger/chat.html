@@ -67,11 +67,10 @@
                 <p style="text-align:center;">Start the conversation!</p>
                 {% endfor %}
             </div>
-            <form method="post" class="chat-form">
-                {% csrf_token %}
-                <textarea name="body" rows="1" placeholder="Type a message" class="message-input" required></textarea>
-                <button type="submit">
-                    <img src="{% static 'messenger/icons/wpf_sent.svg' %}" alt="">
+            <form class="chat-form">
+                <textarea rows="1" placeholder="Type a message" class="message-input" required></textarea>
+                <button type="submit" class="send-button">
+                    <img src="{% static 'messenger/icons/wpf_sent.svg' %}" alt="Send">
                 </button>
             </form>
         </div>
