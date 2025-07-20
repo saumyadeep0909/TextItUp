@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-+cmhgh)!y39+^iqsjr5wb17wwwxp@h-1rjvllx0vn=g&u@)b3^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['textitup.onrender.com', 'www.textitup.onrender.com']
 
 
 # Application definition
