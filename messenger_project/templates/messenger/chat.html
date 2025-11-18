@@ -60,7 +60,6 @@
                 <h3>{{ recipient.username }}</h3>
             </div>
             <div class="chat-messages">
-                <img src="{% static 'messenger/img/Frame.png' %}" alt="">
                 {% for message in messages %}
                 <div class="{% if message.sender == request.user %}sent{% else %}received{% endif %}">
                     <p>{{ message.body }}</p>
