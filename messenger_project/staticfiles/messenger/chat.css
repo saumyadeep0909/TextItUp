@@ -112,12 +112,9 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #dad1e9;
+  background-color: #f4edff;
   background-size: cover;  
-  background-image: url("/static/messenger/img/Frame.png");
-  background-repeat: no-repeat;
-  background-position: center;
-  opacity: 1;
+ 
 }
 
 /* Chat Header */
