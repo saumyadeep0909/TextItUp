@@ -79,55 +79,106 @@
         </div>
     </div>
     <script>
-document.addEventListener("DOMContentLoaded", () => {
 
-    const roomName = "{{ room_name }}";
-    const chatMessages = document.querySelector('.chat-messages');
-    const input = document.querySelector('.message-input');
+    // =======================
+    // Auto-resize textarea
+    // =======================
+    const textarea = document.querySelector('.message-input');
+    textarea.addEventListener('input', () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    });
 
-    // IMPORTANT: choose ws or wss depending on HTTP/HTTPS
-    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-
-    const socket = new WebSocket(
-        wsScheme + '://' + window.location.host + '/ws/chat/' + roomName + '/'
-    );
-
-    socket.onopen = () => {
-        console.log("WebSocket connected:", roomName);
+    // =======================
+    // Auto-scroll to latest message on load
+    // =======================
+    window.onload = function () {
+        const chatMessages = document.querySelector('.chat-messages');
+        if (chatMessages) {
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
     };
 
-    socket.onerror = (err) => {
-        console.error("WebSocket error:", err);
-    };
+    // =======================
+    // New chat popup
+    // =======================
+    function togglePopup() {
+        const popup = document.getElementById("newChatPopup");
+        popup.classList.toggle("show");
+    }
 
-    socket.onmessage = function (e) {
-        const data = JSON.parse(e.data);
+    document.addEventListener('click', function (event) {
+        const popup = document.getElementById("newChatPopup");
+        const icon = document.querySelector('.new-chat-icon');
+        const box = popup.querySelector('.popup-box');
 
-        const bubble = document.createElement('div');
-        bubble.classList.add(
-            data.username === "{{ request.user.username }}" ? "sent" : "received"
+        if (popup.classList.contains('show') &&
+            !box.contains(event.target) &&
+            event.target !== icon) 
+        {
+            popup.classList.remove("show");
+        }
+    });
+
+    // =======================
+    // REAL-TIME WebSocket Setup
+    // =======================
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const roomName = "{{ room_name }}";
+        const chatMessages = document.querySelector('.chat-messages');
+        const input = document.querySelector('.message-input');
+
+        // IMPORTANT: ws for local, wss for deployment
+        const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+
+        const socket = new WebSocket(
+            wsScheme + "://" + window.location.host + "/ws/chat/" + roomName + "/"
         );
 
-        bubble.innerHTML = `
-            <p>${data.message}</p>
-            <small>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12:false })}</small>
-        `;
-        chatMessages.appendChild(bubble);
+        socket.onopen = () => {
+            console.log("WebSocket connected:", roomName);
+        };
 
-        chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: "smooth" });
-    };
+        socket.onerror = (err) => {
+            console.error("WebSocket error:", err);
+        };
 
-    document.querySelector('.chat-form').onsubmit = function(e) {
-        e.preventDefault();
-        const message = input.value.trim();
-        if (!message) return;
+        socket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
 
-        socket.send(JSON.stringify({ message: message }));
-        input.value = '';
-    };
+            const bubble = document.createElement("div");
+            bubble.classList.add(
+                data.username === "{{ request.user.username }}" ? "sent" : "received"
+            );
 
-});
+            bubble.innerHTML = `
+                <p>${data.message}</p>
+                <small>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12:false })}</small>
+            `;
+
+            chatMessages.appendChild(bubble);
+            chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: "smooth" });
+        };
+
+        document.querySelector('.chat-form').onsubmit = function (e) {
+            e.preventDefault();
+            const message = input.value.trim();
+
+            if (message) {
+                socket.send(JSON.stringify({ message: message }));
+                input.value = "";
+                textarea.style.height = "auto"; // reset height after sending
+            }
+        };
+
+    });
+
 </script>
+
 
 </body>
 
