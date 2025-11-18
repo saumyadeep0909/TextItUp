@@ -79,80 +79,56 @@
         </div>
     </div>
     <script>
-        // Auto resize textarea height
-        const textarea = document.querySelector('.message-input');
-        textarea.addEventListener('input', () => {
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-        });
+document.addEventListener("DOMContentLoaded", () => {
 
-        // Auto-scroll to the latest message 
-        window.onload = function () {
-            const chatMessages = document.querySelector('.chat-messages');
-            if (chatMessages) {
-                chatMessages.scrollTo({
-                    top: chatMessages.scrollHeight,
-                    behavior: 'smooth'  
-                });
-            }
-        };
+    const roomName = "{{ room_name }}";
+    const chatMessages = document.querySelector('.chat-messages');
+    const input = document.querySelector('.message-input');
 
-        function togglePopup() {
-            const popup = document.getElementById("newChatPopup");
-            popup.classList.toggle("show");
-        }
-        // Close popup on outside click
-        document.addEventListener('click', function (event) {
-            const popup = document.getElementById("newChatPopup");
-            const icon = document.querySelector('.new-chat-icon');
-            const box = popup.querySelector('.popup-box');
+    // IMPORTANT: choose ws or wss depending on HTTP/HTTPS
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
 
-            // If popup is open and click is outside box and icon
-            if (popup.classList.contains('show') && !box.contains(event.target) && event.target !== icon) {
-                popup.classList.remove('show');
-            }
-        });
+    const socket = new WebSocket(
+        wsScheme + '://' + window.location.host + '/ws/chat/' + roomName + '/'
+    );
 
-        // === WebSocket Real-Time Setup ===
-        const roomName = "{{ room_name }}";
-        console.log("Room name:", roomName);
-        const chatMessages = document.querySelector('.chat-messages');
-        const input = document.querySelector('.message-input');
+    socket.onopen = () => {
+        console.log("WebSocket connected:", roomName);
+    };
 
-        const socket = new WebSocket(
-            'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+    socket.onerror = (err) => {
+        console.error("WebSocket error:", err);
+    };
+
+    socket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+
+        const bubble = document.createElement('div');
+        bubble.classList.add(
+            data.username === "{{ request.user.username }}" ? "sent" : "received"
         );
 
-        socket.onopen = () => {
-            console.log("WebSocket connected");
-        };
-
-        socket.onmessage = function (e) {
-            const data = JSON.parse(e.data);
-            console.log("Message received:", data);
-
-            const messageBubble = document.createElement('div');
-            messageBubble.classList.add(data.username === "{{ request.user.username }}" ? 'sent' : 'received');
-
-            messageBubble.innerHTML = `
+        bubble.innerHTML = `
             <p>${data.message}</p>
-            <small>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit',hour12: false })}</small>
+            <small>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12:false })}</small>
         `;
+        chatMessages.appendChild(bubble);
 
-            chatMessages.appendChild(messageBubble);
-            chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
-        };
+        chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: "smooth" });
+    };
 
-        document.querySelector('.chat-form').onsubmit = function (e) {
-            e.preventDefault();
-            const message = input.value.trim();
-            if (message) {
-                socket.send(JSON.stringify({ message: message }));
-                input.value = '';
-            }
-        };
+    document.querySelector('.chat-form').onsubmit = function(e) {
+        e.preventDefault();
+        const message = input.value.trim();
+        if (!message) return;
 
-    </script>
+        socket.send(JSON.stringify({ message: message }));
+        input.value = '';
+    };
+
+});
+</script>
+
 </body>
 
 </html>
